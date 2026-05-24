@@ -1,0 +1,7 @@
+/target
+# matplotlib plotting venv (managed by uv, see scripts/plot_times.py)
+/.venv
+# python build artifacts
+__pycache__/
+*.pyc
+paper

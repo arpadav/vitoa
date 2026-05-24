@@ -1,0 +1,3 @@
+# clippy configuration knobs (lint *settings* live in Cargo.toml [lints.clippy])
+# Author: aav
+msrv = "1.89"

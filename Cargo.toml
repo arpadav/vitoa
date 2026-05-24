@@ -1,0 +1,49 @@
+[package]
+name = "vitoa"
+version = "0.1.0"
+edition = "2024"
+description = "AVX-512 IFMA integer-to-decimal-string conversion (Champagne Gareau & Lemire, SPE 2026)"
+
+[features]
+# Default: only the function-form API is exposed (vitoa::fmt, fmt_uN, fmt_batch, ...).
+# Enable `macros` to additionally export `vitoa::write!` / `writeln!` /
+# `write_joined!`, drop-in replacements for the `core::` variants with a fast
+# integer path. Off by default to keep the namespace minimal.
+default = []
+macros = []
+
+[lints.clippy]
+# Restrictions enforced crate-wide (test code is allow-listed via lib.rs)
+unwrap_used      = "deny"
+expect_used      = "deny"
+panic            = "deny"
+indexing_slicing = "deny"
+unreachable      = "deny"
+todo             = "deny"
+unimplemented    = "deny"
+
+[dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.8", features = ["html_reports"] }
+itoa = "1"
+# Kani model-checker harnesses live under `#[cfg(kani)]`. Run via
+# `cargo install --locked kani-verifier && cargo kani setup && cargo kani`.
+kani-verifier = "0.67"
+
+[[example]]
+name = "digit_curve"
+required-features = ["macros"]
+
+[[bench]]
+name = "fmt"
+harness = false
+required-features = ["macros"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1
