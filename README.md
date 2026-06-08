@@ -43,34 +43,34 @@ let len = vitoa::write_joined!(buf, sep = b',', 1u64, 2u64).unwrap();  // "1,2"
 
 ```mermaid
 flowchart TD
-    A([call site]) --> B{which entry?}
-    B -->|"fmt(u64)"| C{value &lt; 10⁸ ?}
-    B -->|"fmt_u32"| D{value &lt; 10⁸ ?}
-    B -->|"fmt_u128"| E{value &lt; 10¹⁶ ?}
-    B -->|"fmt_batch"| F[sample 1% of lengths<br/>build histogram]
-    B -->|"write!/writeln! macro"| G{format str = '{}{}…' &amp;<br/>target = String/Vec?}
+    A(["call site"]) --> B{"which entry?"}
+    B -->|"fmt(u64)"| C{"value &lt; 10⁸ ?"}
+    B -->|"fmt_u32"| D{"value &lt; 10⁸ ?"}
+    B -->|"fmt_u128"| E{"value &lt; 10¹⁶ ?"}
+    B -->|"fmt_batch"| F["sample 1% of lengths<br/>build histogram"]
+    B -->|"write!/writeln! macro"| G{"format str = '{}{}…' &amp;<br/>target = String/Vec?"}
 
-    C -->|yes| K8[1× IFMA 8-digit kernel<br/>+ VPMOVQB + masked store]
-    C -->|no|  K16[2× IFMA 8-digit kernels<br/>+ VPERMT2B + masked store]
+    C -->|yes| K8["1× IFMA 8-digit kernel<br/>+ VPMOVQB + masked store"]
+    C -->|no| K16["2× IFMA 8-digit kernels<br/>+ VPERMT2B + masked store"]
     D -->|yes| K8
-    D -->|no|  K16
-    E -->|yes| FMT[delegate to fmt - u64 path]
-    E -->|no|  E2{value &lt; 10³² ?}
-    E2 -->|yes| U17[Granlund-Montgomery /1e16<br/>+ fmt(hi) + unmasked 16-byte store]
-    E2 -->|no|  U33[two GM /1e16 divides<br/>+ u32_le_1e8 top + 2× unmasked stores]
+    D -->|no| K16
+    E -->|yes| FMT["delegate to fmt - u64 path"]
+    E -->|no| E2{"value &lt; 10³² ?"}
+    E2 -->|yes| U17["Granlund-Montgomery /1e16<br/>+ fmt(hi) + unmasked 16-byte store"]
+    E2 -->|no| U33["two GM /1e16 divides<br/>+ u32_le_1e8 top + 2× unmasked stores"]
 
-    F --> F1{dominant length<br/>∈ [17,20] &amp; ρ ≥ 0.95?}
-    F1 -->|yes| HOMO[homogeneous unmasked path §5.5]
-    F1 -->|no|  HETERO[heterogeneous masked path §5.4]
+    F --> F1{"dominant length<br/>∈ [17,20] &amp; ρ ≥ 0.95?"}
+    F1 -->|yes| HOMO["homogeneous unmasked path §5.5"]
+    F1 -->|no| HETERO["heterogeneous masked path §5.4"]
     HOMO --> K16
     HETERO --> K16
 
-    G -->|yes| FAST[FastIntArg::write_into per arg →<br/>u8/u16/u32/u64 → write_u64_fast<br/>u128 → write_u128_fast]
-    G -->|no|  FALLBACK[::core::write!]
+    G -->|yes| FAST["FastIntArg::write_into per arg →<br/>u8/u16/u32/u64 → write_u64_fast<br/>u128 → write_u128_fast"]
+    G -->|no| FALLBACK["::core::write!"]
     FAST --> FMT
     FAST --> E2
 
-    K8  --> END([n bytes written])
+    K8 --> END(["n bytes written"])
     K16 --> END
     FMT --> END
     U17 --> END
